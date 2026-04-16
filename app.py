@@ -614,17 +614,16 @@ VIT ACADEMIC CALENDAR — WINTER SEMESTER 2025-26:
 Be friendly, clear and professional. Use {username}'s name occasionally. Keep responses concise."""
 
             try:
-                client = genai.Client(api_key="AIzaSyDpTQTxhw-2d-pL8BhacrN9FEn_kQvmaWg")
-                response = client.models.generate_content(
-                    model="models/gemini-2.5-flash",
-                    contents=msg,
-                    config={"system_instruction": system_prompt}
+                api_key = os.environ.get("GEMINI_API_KEY")
+                genai.configure(api_key=api_key)
+                model = genai.GenerativeModel(
+                    model_name="gemini-2.0-flash",
+                    system_instruction=system_prompt
                 )
+                response = model.generate_content(msg)
                 reply = response.text
             except Exception as e:
                 reply = f"Sorry, I'm having trouble connecting right now. Please try again later. (Error: {str(e)})"
-
-    return render_template("chatbot.html", reply=reply)
 
 
 # ---------------- TIMETABLE ----------------
