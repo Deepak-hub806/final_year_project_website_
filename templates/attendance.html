@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Attendance — VIT Support</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:#f8f7ff; --sidebar:#0f172a; --card:#ffffff;
+    --purple:#6d28d9; --purple-light:#ede9fe; --purple-mid:#7c3aed;
+    --green:#059669; --green-light:#d1fae5;
+    --orange:#d97706; --orange-light:#fef3c7;
+    --red:#dc2626; --red-light:#fee2e2;
+    --text:#1e293b; --muted:#64748b; --border:#e2e8f0;
+    --font:'Sora',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); display:flex; height:100vh; overflow:hidden; }
+
+  .sidebar { width:240px; background:var(--sidebar); color:white; display:flex; flex-direction:column; padding:28px 20px; flex-shrink:0; height:100vh; overflow-y:auto; }
+  .logo { font-size:17px; font-weight:700; color:white; margin-bottom:36px; }
+  .logo span { color:#a78bfa; }
+  .sec-label { font-size:10px; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+  .nav-link { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; color:#94a3b8; font-size:13.5px; font-weight:500; text-decoration:none; margin-bottom:4px; transition:all 0.15s; }
+  .nav-link:hover { background:rgba(255,255,255,0.06); color:white; }
+  .nav-link.active { background:var(--purple); color:white; }
+  .nav-icon { font-size:16px; width:18px; text-align:center; }
+  .sidebar-divider { border:none; border-top:1px solid #1e293b; margin:18px 0; }
+  .sidebar-user { margin-top:auto; padding:12px 14px; background:rgba(255,255,255,0.05); border-radius:10px; }
+  .sidebar-user .name { font-weight:600; color:white; font-size:13px; }
+  .sidebar-user .role { color:#64748b; font-size:11px; margin-top:2px; }
+
+  .main { flex:1; overflow-y:auto; padding:32px; }
+  .page-title { font-size:22px; font-weight:700; letter-spacing:-0.4px; margin-bottom:4px; }
+  .page-title span { color:var(--purple); }
+  .page-sub { color:var(--muted); font-size:13.5px; margin-bottom:24px; }
+
+  /* TABS */
+  .tabs { display:flex; gap:4px; background:white; border:1px solid var(--border); border-radius:12px; padding:4px; width:fit-content; margin-bottom:28px; }
+  .tab { padding:9px 22px; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s; color:var(--muted); border:none; background:transparent; font-family:var(--font); }
+  .tab.active { background:var(--purple); color:white; }
+
+  /* FLASH */
+  .flash { padding:12px 16px; border-radius:10px; margin-bottom:20px; font-size:13px; font-weight:500; }
+  .flash.success { background:var(--green-light); color:var(--green); border:1px solid #a7f3d0; }
+
+  /* OVERALL TAB */
+  .calc-card { background:white; border-radius:16px; padding:32px; max-width:480px; border:1px solid var(--border); box-shadow:0 2px 12px rgba(0,0,0,0.04); }
+  .calc-card h2 { font-size:18px; font-weight:700; margin-bottom:6px; }
+  .calc-card p { color:var(--muted); font-size:13px; margin-bottom:24px; line-height:1.6; }
+  .form-row { margin-bottom:18px; }
+  .form-label { font-size:13px; font-weight:600; margin-bottom:8px; display:block; }
+  .form-input { width:100%; padding:12px 16px; border:1.5px solid var(--border); border-radius:10px; font-family:var(--font); font-size:14px; color:var(--text); background:var(--bg); transition:border-color 0.15s; outline:none; }
+  .form-input:focus { border-color:var(--purple); }
+  .btn-primary { background:var(--purple); color:white; padding:13px 28px; border-radius:10px; border:none; font-family:var(--font); font-size:14px; font-weight:600; cursor:pointer; transition:all 0.15s; }
+  .btn-primary:hover { background:var(--purple-mid); }
+
+  /* SUBJECT TAB */
+  .subj-layout { display:grid; grid-template-columns:360px 1fr; gap:24px; }
+  .add-card { background:white; border-radius:16px; padding:28px; border:1px solid var(--border); height:fit-content; }
+  .add-card h3 { font-size:15px; font-weight:700; margin-bottom:16px; }
+  .form-select { width:100%; padding:12px 16px; border:1.5px solid var(--border); border-radius:10px; font-family:var(--font); font-size:14px; color:var(--text); background:var(--bg); outline:none; cursor:pointer; }
+  .form-select:focus { border-color:var(--purple); }
+  .or-divider { text-align:center; color:var(--muted); font-size:12px; font-weight:600; margin:12px 0; position:relative; }
+  .or-divider::before, .or-divider::after { content:''; position:absolute; top:50%; width:40%; height:1px; background:var(--border); }
+  .or-divider::before { left:0; } .or-divider::after { right:0; }
+
+  /* SUBJECT CARDS */
+  .subj-list h3 { font-size:15px; font-weight:700; margin-bottom:14px; }
+  .subj-cards { display:flex; flex-direction:column; gap:12px; }
+  .subj-card { background:white; border-radius:12px; padding:18px 20px; border:1px solid var(--border); transition:all 0.15s; }
+  .subj-card:hover { border-color:var(--purple); }
+  .subj-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .subj-name { font-size:14px; font-weight:600; }
+  .subj-pct { font-family:var(--mono); font-size:18px; font-weight:700; }
+  .pct-safe { color:var(--green); } .pct-warn { color:var(--orange); } .pct-danger { color:var(--red); }
+  .att-bar { height:8px; background:var(--border); border-radius:4px; overflow:hidden; margin-bottom:10px; }
+  .att-fill { height:100%; border-radius:4px; transition:width 0.4s; }
+  .fill-safe { background:var(--green); } .fill-warn { background:var(--orange); } .fill-danger { background:var(--red); }
+  .subj-footer { display:flex; align-items:center; justify-content:space-between; }
+  .subj-meta { font-size:12px; color:var(--muted); }
+  .subj-status { font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; }
+  .status-safe { background:var(--green-light); color:var(--green); }
+  .status-warn { background:var(--orange-light); color:var(--orange); }
+  .status-danger { background:var(--red-light); color:var(--red); }
+  .delete-btn { background:none; border:none; color:#cbd5e1; cursor:pointer; font-size:16px; padding:2px 6px; border-radius:6px; transition:all 0.15s; }
+  .delete-btn:hover { color:var(--red); background:var(--red-light); }
+
+  .empty-subj { text-align:center; padding:32px; background:white; border-radius:12px; border:1px solid var(--border); color:var(--muted); font-size:13px; }
+
+  /* CLASSES NEEDED HINT */
+  .hint-box { background:var(--purple-light); border-radius:10px; padding:12px 16px; margin-top:12px; font-size:12px; color:var(--purple); font-weight:500; display:none; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">VIT <span>Support</span></div>
+  <div class="sec-label">Navigation</div>
+  <a href="/dashboard" class="nav-link"><span class="nav-icon">🏠</span> Dashboard</a>
+  <a href="/cgpa" class="nav-link"><span class="nav-icon">📊</span> CGPA Calculator</a>
+  <a href="/update-attendance" class="nav-link active"><span class="nav-icon">📅</span> Attendance</a>
+  <a href="/timetable" class="nav-link"><span class="nav-icon">🗓️</span> Timetable</a>
+  <a href="/chatbot" class="nav-link"><span class="nav-icon">🤖</span> AI Chatbot</a>
+  <hr class="sidebar-divider"/>
+  <a href="/profile" class="nav-link"><span class="nav-icon">👤</span> Profile</a>
+  <a href="/logout" class="nav-link"><span class="nav-icon">🚪</span> Logout</a>
+  <div class="sidebar-user">
+    <div class="name">{{ session.get('username','Student') }}</div>
+    <div class="role">VIT Student</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-title">Attendance <span>Tracker</span></div>
+  <div class="page-sub">Track your overall and subject-wise attendance to stay eligible for FAT.</div>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash success">{{ messages[0] }}</div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('overall', this)">📊 Overall Attendance</button>
+    <button class="tab" onclick="switchTab('subject', this)">📚 Subject-wise</button>
+  </div>
+
+  <!-- OVERALL TAB -->
+  <div id="tab-overall">
+    <div class="calc-card">
+      <h2>Overall Attendance Calculator</h2>
+      <p>Enter your total and attended classes across all subjects to calculate your overall attendance percentage saved to your profile.</p>
+      <form method="POST" action="/update-attendance">
+        <input type="hidden" name="form_type" value="overall"/>
+        <div class="form-row">
+          <label class="form-label">Total Classes Conducted</label>
+          <input class="form-input" type="number" name="total_classes" placeholder="e.g. 120" min="1" required/>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Classes Attended</label>
+          <input class="form-input" type="number" name="attended_classes" placeholder="e.g. 98" min="0" required/>
+        </div>
+        <button class="btn-primary" type="submit">Calculate & Save →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- SUBJECT TAB -->
+  <div id="tab-subject" style="display:none;">
+    <div class="subj-layout">
+
+      <!-- ADD FORM -->
+      <div class="add-card">
+        <h3>➕ Add / Update Subject</h3>
+        <form method="POST" action="/update-attendance">
+          <input type="hidden" name="form_type" value="subject"/>
+          <div class="form-row">
+            <label class="form-label">Subject</label>
+            {% if sem_subjects %}
+            <select class="form-select" name="subject_name" onchange="document.getElementById('customName').style.display=this.value=='__custom__'?'block':'none'">
+              <option value="">— Pick from your semester —</option>
+              {% for s in sem_subjects %}
+              <option value="{{ s }}">{{ s }}</option>
+              {% endfor %}
+              <option value="__custom__">✏️ Enter manually...</option>
+            </select>
+            <div class="or-divider">or</div>
+            {% endif %}
+            <input class="form-input" type="text" id="customName" name="subject_name" placeholder="Type subject name" {% if sem_subjects %}style="display:none;"{% endif %}/>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Total Classes Conducted</label>
+            <input class="form-input" type="number" name="total_classes" id="totalInput" placeholder="e.g. 30" min="1" required oninput="calcHint()"/>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Classes Attended</label>
+            <input class="form-input" type="number" name="attended_classes" id="attendedInput" placeholder="e.g. 24" min="0" required oninput="calcHint()"/>
+          </div>
+          <div class="hint-box" id="hintBox"></div>
+          <button class="btn-primary" type="submit" style="margin-top:16px;width:100%;">Save Subject →</button>
+        </form>
+      </div>
+
+      <!-- SUBJECT LIST -->
+      <div class="subj-list">
+        <h3>📋 Your Subjects ({{ subj_data|length }})</h3>
+        {% if subj_data %}
+        <div class="subj-cards">
+          {% for s in subj_data %}
+          {% set cls = 'safe' if s.status == 'safe' else ('warn' if s.status == 'warning' else 'danger') %}
+          <div class="subj-card" id="card-{{ loop.index }}">
+            <div class="subj-top">
+              <span class="subj-name">{{ s.subject_name }}</span>
+              <span class="subj-pct pct-{{ cls }}">{{ s.percentage }}%</span>
+            </div>
+            <div class="att-bar">
+              <div class="att-fill fill-{{ cls }}" style="width:{{ [s.percentage,100]|min }}%"></div>
+            </div>
+            <div class="subj-footer">
+              <span class="subj-meta">{{ s.attended }}/{{ s.total_classes }} classes</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="subj-status status-{{ cls }}">
+                  {% if s.status == 'safe' %}✅ Safe{% elif s.status == 'warning' %}⚠️ Warning{% else %}❌ Detained risk{% endif %}
+                </span>
+                <button class="delete-btn" onclick="deleteSubject('{{ s.subject_name }}', {{ loop.index }})" title="Remove">✕</button>
+              </div>
+            </div>
+            {% if s.status != 'safe' %}
+            <div style="margin-top:10px;padding:8px 12px;background:{% if s.status=='warning' %}var(--orange-light){% else %}var(--red-light){% endif %};border-radius:8px;font-size:11px;font-weight:500;color:{% if s.status=='warning' %}var(--orange){% else %}var(--red){% endif %};">
+              {% set needed = ((0.75 * s.total_classes) - s.attended)|int + 1 %}
+              ⚠️ Need to attend {{ needed }} more consecutive classes to reach 75%
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-subj">
+          <div style="font-size:32px;margin-bottom:10px;">📭</div>
+          No subjects added yet. Add your first subject using the form.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(tab, el) {
+  document.getElementById('tab-overall').style.display = tab === 'overall' ? 'block' : 'none';
+  document.getElementById('tab-subject').style.display = tab === 'subject' ? 'block' : 'none';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// If select changes to custom, focus the text input
+const sel = document.querySelector('select[name="subject_name"]');
+if (sel) {
+  sel.addEventListener('change', function() {
+    const custom = document.getElementById('customName');
+    if (this.value === '__custom__') {
+      custom.style.display = 'block';
+      custom.name = 'subject_name';
+      this.name = '_subject_select';
+      custom.focus();
+    } else {
+      custom.style.display = 'none';
+      custom.name = '_custom_name';
+      this.name = 'subject_name';
+    }
+  });
+}
+
+function calcHint() {
+  const total = parseInt(document.getElementById('totalInput').value) || 0;
+  const attended = parseInt(document.getElementById('attendedInput').value) || 0;
+  const hint = document.getElementById('hintBox');
+  if (!total || !attended) { hint.style.display = 'none'; return; }
+  const pct = (attended / total * 100).toFixed(1);
+  const needed75 = Math.ceil(0.75 * total);
+  const diff = needed75 - attended;
+  hint.style.display = 'block';
+  if (diff <= 0) {
+    hint.textContent = `✅ Current: ${pct}% — You meet the 75% requirement!`;
+  } else {
+    hint.textContent = `⚠️ Current: ${pct}% — Need ${diff} more classes to reach 75%.`;
+  }
+}
+
+function deleteSubject(name, idx) {
+  if (!confirm(`Remove "${name}" from your tracker?`)) return;
+  fetch('/attendance/delete-subject', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({subject_name: name})
+  }).then(r => r.json()).then(d => {
+    if (d.success) {
+      const card = document.getElementById('card-' + idx);
+      card.style.opacity = '0';
+      card.style.transform = 'translateX(20px)';
+      card.style.transition = 'all 0.3s';
+      setTimeout(() => card.remove(), 300);
+    }
+  });
+}
+
+// Auto-open subject tab if URL has #subject
+if (window.location.hash === '#subject') {
+  switchTab('subject', document.querySelectorAll('.tab')[1]);
+}
+</script>
+</body>
+</html>

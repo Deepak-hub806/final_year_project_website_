@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Login</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Inter, sans-serif;
+            height: 100vh;
+            display: flex;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+        }
+
+        .left {
+            flex: 1;
+            color: white;
+            padding: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .left h1 {
+            font-family: Poppins;
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+
+        .left p {
+            color: #cbd5f5;
+            font-size: 18px;
+        }
+
+        .right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.card {
+    width: 380px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(18px);
+    padding: 40px;
+    border-radius: 14px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+}
+
+
+        h2 {
+            font-family: Poppins;
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        input::placeholder {
+            color: #cbd5f5;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .link {
+            display: block;
+            margin-top: 15px;
+            color: #93c5fd;
+            text-decoration: none;
+        }
+
+        .error {
+            color: #fecaca;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="left">
+    <h1>Welcome Back 👋</h1>
+    <p>Access your AI-powered academic dashboard</p>
+</div>
+
+<div class="right">
+    <div class="card">
+
+        <h2>Student Login</h2>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <p class="error">{{ messages[0] }}</p>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <input type="email" name="email" placeholder="VIT Email" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+
+        <a class="link" href="/signup">Create account</a>
+    </div>
+</div>
+
+</body>
+</html>

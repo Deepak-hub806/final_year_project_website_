@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CGPA Calculator</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600&display=swap" rel="stylesheet">
+
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:Inter, sans-serif; }
+        body { display:flex; background:#f1f5f9; height:100vh; }
+
+        .sidebar {
+            width:240px;
+            background:#0f172a;
+            color:white;
+            padding:25px 20px;
+        }
+
+        .sidebar h2 { font-family:Poppins; margin-bottom:30px; }
+
+        .nav a {
+            display:block;
+            padding:12px;
+            color:#cbd5f5;
+            text-decoration:none;
+            border-radius:8px;
+            margin-bottom:10px;
+        }
+
+        .nav a:hover { background:#1e293b; color:white; }
+
+        .main { flex:1; padding:40px; }
+
+        .card {
+            max-width:650px;
+            margin:auto;
+            background:white;
+            padding:35px;
+            border-radius:14px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        h1 { font-family:Poppins; margin-bottom:10px; }
+        .subtitle { color:#64748b; margin-bottom:25px; }
+
+        select {
+            width:100%;
+            padding:12px;
+            margin-top:6px;
+            border-radius:8px;
+            border:1px solid #cbd5e1;
+            font-size:15px;
+        }
+
+        .row {
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap:15px;
+            margin-bottom:15px;
+        }
+
+        .btn {
+            width:100%;
+            padding:14px;
+            border:none;
+            border-radius:10px;
+            background:#2563eb;
+            color:white;
+            font-size:16px;
+            cursor:pointer;
+            margin-top:10px;
+        }
+
+        .btn:hover { background:#1d4ed8; }
+    </style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>VIT Support</h2>
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/profile">Profile</a>
+        <a href="/logout">Logout</a>
+    </div>
+</div>
+
+<div class="main">
+    <div class="card">
+        <h1>CGPA Calculator</h1>
+        <p class="subtitle">Select number of subjects to begin</p>
+
+        <label>Number of Subjects</label>
+        <select id="subjectCount">
+            <option value="">Select</option>
+            <option value="6">6 Subjects</option>
+            <option value="7">7 Subjects</option>
+            <option value="8">8 Subjects</option>
+            <option value="9">9 Subjects</option>
+            <option value="10">10 Subjects</option>
+        </select>
+
+        <!-- ✅ IMPORTANT: url_for -->
+        <form method="POST" action="{{ url_for('update_cgpa') }}" id="cgpaForm">
+            <div id="subjectsArea"></div>
+            <button class="btn" type="submit">Calculate CGPA</button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById("subjectCount").addEventListener("change", function() {
+    const count = this.value;
+    const area = document.getElementById("subjectsArea");
+    area.innerHTML = "";
+
+    for (let i = 1; i <= count; i++) {
+        area.innerHTML += `
+            <div class="row">
+                <div>
+                    <label>Grade (Subject ${i})</label>
+                    <select name="grade_${i}" required>
+                        <option value="">Select Grade</option>
+                        <option value="S">S</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                        <option value="F">F</option>
+                        <option value="N">N</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Credits</label>
+                    <select name="credit_${i}" required>
+                        <option value="">Select Credit</option>
+                        <option value="4">4</option>
+                        <option value="3">3</option>
+                        <option value="2">2</option>
+                        <option value="1.5">1.5</option>
+                        <option value="1">1</option>
+                    </select>
+                </div>
+            </div>
+        `;
+    }
+});
+</script>
+
+</body>
+</html>

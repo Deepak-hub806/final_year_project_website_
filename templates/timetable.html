@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Timetable — VIT Support</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:#f8f7ff; --sidebar:#0f172a; --card:#fff;
+    --purple:#6d28d9; --purple-light:#ede9fe; --purple-mid:#7c3aed;
+    --green:#059669; --green-light:#d1fae5;
+    --orange:#d97706; --orange-light:#fef3c7;
+    --red:#dc2626; --red-light:#fee2e2;
+    --blue-light:#dbeafe;
+    --text:#1e293b; --muted:#64748b; --border:#e2e8f0;
+    --font:'Sora',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); display:flex; height:100vh; overflow:hidden; }
+
+  .sidebar { width:240px; background:var(--sidebar); color:white; display:flex; flex-direction:column; padding:28px 20px; flex-shrink:0; height:100vh; overflow-y:auto; }
+  .logo { font-size:17px; font-weight:700; color:white; margin-bottom:36px; }
+  .logo span { color:#a78bfa; }
+  .sec-label { font-size:10px; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+  .nav-link { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; color:#94a3b8; font-size:13.5px; font-weight:500; text-decoration:none; margin-bottom:4px; transition:all 0.15s; }
+  .nav-link:hover { background:rgba(255,255,255,0.06); color:white; }
+  .nav-link.active { background:var(--purple); color:white; }
+  .nav-icon { font-size:16px; width:18px; text-align:center; }
+  .sidebar-divider { border:none; border-top:1px solid #1e293b; margin:18px 0; }
+  .sidebar-user { margin-top:auto; padding:12px 14px; background:rgba(255,255,255,0.05); border-radius:10px; }
+  .sidebar-user .name { font-weight:600; color:white; font-size:13px; }
+  .sidebar-user .role { color:#64748b; font-size:11px; margin-top:2px; }
+
+  .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .topbar { padding:18px 32px; background:white; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .topbar-title { font-size:20px; font-weight:700; letter-spacing:-0.4px; }
+  .topbar-title span { color:var(--purple); }
+  .topbar-right { display:flex; align-items:center; gap:12px; }
+  .sem-selector { display:flex; align-items:center; gap:8px; }
+  .sem-label { font-size:12px; font-weight:600; color:var(--muted); }
+  .sem-select { padding:8px 14px; border:1.5px solid var(--border); border-radius:9px; font-family:var(--font); font-size:13px; font-weight:600; color:var(--text); background:white; outline:none; cursor:pointer; transition:border-color 0.15s; }
+  .sem-select:focus { border-color:var(--purple); }
+  .step-badge { background:var(--purple-light); color:var(--purple); font-size:11px; font-weight:600; padding:4px 12px; border-radius:20px; font-family:var(--mono); }
+
+  .content { flex:1; overflow-y:auto; padding:28px 32px; }
+
+  /* STEPS */
+  .steps { display:flex; align-items:center; gap:0; margin-bottom:28px; }
+  .step { display:flex; align-items:center; gap:10px; padding:10px 20px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s; color:var(--muted); }
+  .step.active { background:var(--purple); color:white; }
+  .step.done { background:var(--green-light); color:var(--green); }
+  .step-num { width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,0.08); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
+  .step.active .step-num { background:rgba(255,255,255,0.25); }
+  .step.done .step-num { background:var(--green); color:white; }
+  .step-arrow { color:#cbd5e1; font-size:18px; margin:0 4px; }
+
+  /* PANELS */
+  .panel { display:none; animation:fadeUp 0.3s ease; }
+  .panel.active { display:block; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  /* STEP 1 */
+  .setup-card { background:white; border-radius:16px; padding:36px; max-width:540px; border:1px solid var(--border); box-shadow:0 2px 12px rgba(0,0,0,0.04); }
+  .setup-card h2 { font-size:22px; font-weight:700; margin-bottom:6px; }
+  .setup-card p { color:var(--muted); font-size:14px; margin-bottom:28px; line-height:1.6; }
+  .form-row { margin-bottom:20px; }
+  .form-label { font-size:13px; font-weight:600; margin-bottom:8px; display:block; }
+  .form-input { width:100%; padding:12px 16px; border:1.5px solid var(--border); border-radius:10px; font-family:var(--font); font-size:14px; color:var(--text); background:var(--bg); transition:border-color 0.15s; outline:none; }
+  .form-input:focus { border-color:var(--purple); }
+  .plan-preview { background:var(--purple-light); border-radius:12px; padding:16px 20px; margin:20px 0; display:none; }
+  .plan-preview h4 { font-size:13px; font-weight:700; color:var(--purple); margin-bottom:10px; }
+  .plan-preview-grid { display:flex; gap:10px; flex-wrap:wrap; }
+  .plan-tag { background:white; border:1.5px solid var(--purple); color:var(--purple); padding:5px 14px; border-radius:20px; font-size:12px; font-weight:600; }
+  .btn-primary { background:var(--purple); color:white; padding:13px 28px; border-radius:10px; border:none; font-family:var(--font); font-size:14px; font-weight:600; cursor:pointer; transition:all 0.15s; display:inline-flex; align-items:center; gap:8px; }
+  .btn-primary:hover { background:var(--purple-mid); transform:translateY(-1px); }
+
+  /* STEP 2 */
+  .plans-header { margin-bottom:20px; }
+  .plans-header h2 { font-size:20px; font-weight:700; }
+  .plans-header p { color:var(--muted); font-size:14px; margin-top:4px; }
+  .plans-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:18px; margin-bottom:16px; }
+  .plan-card { background:white; border-radius:14px; padding:24px; border:2px solid var(--border); cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden; }
+  .plan-card:hover:not(.full) { border-color:var(--purple); transform:translateY(-2px); box-shadow:0 8px 24px rgba(109,40,217,0.12); }
+  .plan-card.selected { border-color:var(--purple); background:#faf7ff; }
+  .plan-card.full { opacity:0.6; cursor:not-allowed; }
+  .plan-card.full::after { content:'🔒 FULL'; position:absolute; top:14px; right:14px; background:var(--red); color:white; font-size:10px; font-weight:700; padding:3px 10px; border-radius:20px; }
+  .plan-name { font-size:16px; font-weight:700; margin-bottom:4px; }
+  .plan-type { display:inline-block; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; margin-bottom:14px; }
+  .type-morning { background:#fef9c3; color:#854d0e; }
+  .type-evening { background:var(--blue-light); color:#1d4ed8; }
+  .type-mixed { background:var(--purple-light); color:var(--purple); }
+  .seat-bar-wrap { margin-top:14px; }
+  .seat-bar-info { display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px; }
+  .seat-bar { height:6px; background:var(--border); border-radius:4px; overflow:hidden; }
+  .seat-fill { height:100%; border-radius:4px; transition:width 0.4s; }
+  .fill-ok { background:var(--green); } .fill-warn { background:var(--orange); } .fill-full { background:var(--red); }
+  .select-btn { margin-top:16px; width:100%; padding:11px; border-radius:9px; border:1.5px solid var(--purple); background:transparent; color:var(--purple); font-family:var(--font); font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s; }
+  .select-btn:hover { background:var(--purple); color:white; }
+  .plan-card.selected .select-btn { background:var(--purple); color:white; }
+  .plan-card.full .select-btn { display:none; }
+
+  /* SUBJECTS IN PLAN CARD */
+  .plan-subj-list { margin-top:10px; }
+  .plan-subj-item { font-size:11px; color:var(--muted); padding:3px 0; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:6px; }
+  .plan-subj-item:last-child { border-bottom:none; }
+  .plan-subj-item::before { content:'•'; color:var(--purple); font-size:14px; }
+
+  /* STEP 3 */
+  .tt-topbar { background:white; border-radius:14px; padding:18px 24px; border:1px solid var(--border); margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+  .tt-plan-name { font-size:16px; font-weight:700; }
+  .tt-plan-desc { font-size:12px; color:var(--muted); margin-top:2px; }
+  .tt-plan-tag { font-size:12px; padding:4px 12px; border-radius:20px; font-weight:600; }
+  .tt-actions { display:flex; gap:10px; }
+  .btn-outline { padding:9px 18px; border-radius:9px; border:1.5px solid var(--border); background:white; color:var(--text); font-family:var(--font); font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s; }
+  .btn-outline:hover { border-color:var(--purple); color:var(--purple); }
+  .btn-danger { padding:9px 18px; border-radius:9px; border:1.5px solid var(--red-light); background:var(--red-light); color:var(--red); font-family:var(--font); font-size:13px; font-weight:600; cursor:pointer; }
+
+  .legend { background:white; border-radius:14px; padding:20px 24px; border:1px solid var(--border); margin-bottom:20px; }
+  .legend h4 { font-size:13px; font-weight:700; margin-bottom:14px; }
+  .legend-grid { display:flex; flex-wrap:wrap; gap:10px; }
+  .legend-item { display:flex; align-items:center; gap:8px; padding:7px 12px; border-radius:8px; border:1px solid var(--border); font-size:12px; }
+  .legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+
+  .grid-wrap { background:white; border-radius:14px; border:1px solid var(--border); overflow:hidden; margin-bottom:20px; }
+  .grid-title { padding:13px 20px; font-size:13px; font-weight:700; border-bottom:1px solid var(--border); }
+  .grid-table { width:100%; border-collapse:collapse; }
+  .grid-table th { background:#f8fafc; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--muted); padding:10px 8px; text-align:center; border-bottom:1px solid var(--border); border-right:1px solid var(--border); }
+  .grid-table td { padding:0; border-right:1px solid var(--border); border-bottom:1px solid var(--border); height:60px; vertical-align:middle; text-align:center; cursor:pointer; }
+  .grid-table td.day-col { background:#f8fafc; cursor:default; }
+  .slot-cell { height:60px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:5px; transition:filter 0.15s; }
+  .slot-cell:hover { filter:brightness(0.93); }
+  .slot-cell.empty { background:#f8fafc; }
+  .slot-code { font-family:var(--mono); font-size:10px; font-weight:600; opacity:0.6; }
+  .slot-subj { font-size:11px; font-weight:600; margin-top:2px; }
+  .slot-type { font-size:9px; opacity:0.65; margin-top:1px; }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:24px; right:24px; background:#1e293b; color:white; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:500; transform:translateY(80px); opacity:0; transition:all 0.3s; z-index:9999; }
+  .toast.show { transform:translateY(0); opacity:1; }
+</style>
+</head>
+<body>
+
+<!-- @ts-nocheck -->
+<script>
+// Data from Flask
+const SEMESTER_COURSES = {{ semester_courses | tojson }};
+const PLAN_TEMPLATES = {{ plan_templates | tojson }};
+const SEAT_COUNTS = {{ seat_counts | tojson }};
+const USER_SEMESTER = "{{ user_semester }}";
+const USER_PLAN = "{{ user_plan }}";
+const EXISTING_SMART = {{ smart_timetable | tojson if smart_timetable else 'null' }};
+</script>
+
+<div class="sidebar">
+  <div class="logo">VIT <span>Support</span></div>
+  <div class="sec-label">Navigation</div>
+  <a href="/dashboard" class="nav-link"><span class="nav-icon">🏠</span> Dashboard</a>
+  <a href="/cgpa" class="nav-link"><span class="nav-icon">📊</span> CGPA Calculator</a>
+  <a href="/update-attendance" class="nav-link"><span class="nav-icon">📅</span> Attendance</a>
+  <a href="/timetable" class="nav-link active"><span class="nav-icon">🗓️</span> Timetable</a>
+  <a href="/chatbot" class="nav-link"><span class="nav-icon">🤖</span> AI Chatbot</a>
+  <hr class="sidebar-divider"/>
+  <a href="/profile" class="nav-link"><span class="nav-icon">👤</span> Profile</a>
+  <a href="/logout" class="nav-link"><span class="nav-icon">🚪</span> Logout</a>
+  <div class="sidebar-user">
+    <div class="name">{{ username }}</div>
+    <div class="role">Sem {{ user_semester }} Student</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Smart <span>Timetable</span> Planner</div>
+    <div class="topbar-right">
+      <div class="sem-selector">
+        <span class="sem-label">Semester:</span>
+        <select class="sem-select" id="globalSemSelect" onchange="onSemesterChange(this.value)">
+          {% for s in semester_courses.keys() %}
+          <option value="{{ s }}" {% if s == user_semester %}selected{% endif %}>Semester {{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="step-badge" id="stepBadge">Step 1 of 3</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="steps">
+      <div class="step active" id="stepBtn1"><div class="step-num">1</div> Setup</div>
+      <div class="step-arrow">›</div>
+      <div class="step" id="stepBtn2"><div class="step-num">2</div> Choose Plan</div>
+      <div class="step-arrow">›</div>
+      <div class="step" id="stepBtn3"><div class="step-num">3</div> My Timetable</div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="panel active" id="panel1">
+      <div class="setup-card">
+        <h2>🎓 Department Setup</h2>
+        <p>Select your semester and enter your department's total student count. The system calculates how many batch plans are needed — each plan serves up to 70 students, just like VIT's real slot allocation.</p>
+        <div class="form-row">
+          <label class="form-label">Semester</label>
+          <select class="form-input" id="semSelect" onchange="onSemesterChange(this.value)">
+            {% for s in semester_courses.keys() %}
+            <option value="{{ s }}" {% if s == user_semester %}selected{% endif %}>Semester {{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Total Students in Department</label>
+          <input class="form-input" type="number" id="studentCount" placeholder="e.g. 200" min="1" max="1000" value="200" oninput="previewPlans(this.value)"/>
+        </div>
+        <div class="plan-preview" id="planPreview">
+          <h4 id="planPreviewTitle"></h4>
+          <div class="plan-preview-grid" id="planPreviewGrid"></div>
+        </div>
+        <button class="btn-primary" onclick="goStep2()">Generate Plans →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="panel" id="panel2">
+      <div class="plans-header">
+        <h2 id="plansTitle">Choose Your Timetable Plan</h2>
+        <p id="plansSubtitle"></p>
+      </div>
+      <div class="plans-grid" id="plansGrid"></div>
+      <p style="font-size:13px;color:var(--muted);">🔒 Full plans are unavailable. Choose any open plan that suits your preference.</p>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="panel" id="panel3">
+      <div class="tt-topbar">
+        <div>
+          <div class="tt-plan-name" id="ttPlanName">—</div>
+          <div class="tt-plan-desc" id="ttPlanDesc">—</div>
+        </div>
+        <span class="tt-plan-tag" id="ttPlanTag">—</span>
+        <div class="tt-actions">
+          <button class="btn-outline" onclick="goStep(2)">⇄ Switch Plan</button>
+          <button class="btn-outline" onclick="window.print()">🖨 Print</button>
+          <button class="btn-danger" onclick="resetAll()">✕ Reset</button>
+        </div>
+      </div>
+
+      <div class="legend">
+        <h4>📚 Subjects & Colours</h4>
+        <div class="legend-grid" id="legendGrid"></div>
+      </div>
+
+      <div class="grid-wrap">
+        <div class="grid-title">📖 Theory Hours</div>
+        <table class="grid-table" id="theoryTable"></table>
+      </div>
+      <div class="grid-wrap">
+        <div class="grid-title">🔬 Lab Hours</div>
+        <table class="grid-table" id="labTable"></table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONSTANTS ─────────────────────────────────────────────────────────
+const DAYS = ["MON","TUE","WED","THU","FRI"];
+const THEORY_PERIODS = [
+  {slot:"A1",time:"8:00–8:50"},{slot:"F1",time:"8:50–9:40"},{slot:"D1",time:"9:45–10:35"},
+  {slot:"TB1",time:"10:35–10:50",type:"break"},
+  {slot:"B1",time:"10:50–11:40"},{slot:"G1",time:"11:40–12:30"},{slot:"A2",time:"12:30–1:20"},
+  {slot:"TL",time:"1:20–2:00",type:"lunch"},
+  {slot:"C1",time:"2:00–2:50"},{slot:"H1",time:"2:50–3:40"},{slot:"B2",time:"3:45–4:35"},
+  {slot:"TB2",time:"4:35–4:50",type:"break"},
+  {slot:"C2",time:"4:50–5:40"},{slot:"E2",time:"5:40–6:30"},
+];
+const LAB_PERIODS = [
+  {slot:"L1-L2",time:"8:00–9:50"},{slot:"L3-L4",time:"9:45–11:35"},
+  {slot:"L5-L6",time:"11:40–1:30"},{slot:"L7-L8",time:"2:00–3:50"},{slot:"L9-L10",time:"3:45–5:35"},
+];
+
+const COLORS = [
+  {bg:"#ede9fe",fg:"#6d28d9"},{bg:"#dbeafe",fg:"#1d4ed8"},{bg:"#d1fae5",fg:"#065f46"},
+  {bg:"#fef3c7",fg:"#92400e"},{bg:"#fce7f3",fg:"#9d174d"},{bg:"#e0e7ff",fg:"#3730a3"},
+  {bg:"#ecfdf5",fg:"#047857"},{bg:"#fff7ed",fg:"#c2410c"},{bg:"#f0fdf4",fg:"#166534"},
+  {bg:"#fdf4ff",fg:"#7e22ce"},{bg:"#f0f9ff",fg:"#0369a1"},{bg:"#fefce8",fg:"#854d0e"},
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────
+let currentSem = USER_SEMESTER;
+let totalStudents = 200;
+let selectedPlanId = null;
+let selectedSubjects = [];
+
+// Seat counts from DB
+const seatCounts = SEAT_COUNTS;
+
+// ── SEMESTER CHANGE ────────────────────────────────────────────────────
+function onSemesterChange(sem) {
+  currentSem = sem;
+  document.getElementById("semSelect").value = sem;
+  document.getElementById("globalSemSelect").value = sem;
+  previewPlans(document.getElementById("studentCount").value);
+}
+
+// ── STEP 1 ─────────────────────────────────────────────────────────────
+function previewPlans(val) {
+  const n = parseInt(val);
+  if (!n || n < 1) { document.getElementById("planPreview").style.display = "none"; return; }
+  const count = Math.min(Math.ceil(n / 70), 3);
+  const preview = document.getElementById("planPreview");
+  preview.style.display = "block";
+  document.getElementById("planPreviewTitle").textContent =
+    `${count} timetable plan${count > 1 ? "s" : ""} for ${n} students (max 70 per plan) — Semester ${currentSem}`;
+  const grid = document.getElementById("planPreviewGrid");
+  const labels = ["Morning Batch","Afternoon Batch","Mixed Batch"];
+  grid.innerHTML = labels.slice(0, count).map(l => `<span class="plan-tag">${l}</span>`).join("");
+}
+
+function goStep2() {
+  const val = parseInt(document.getElementById("studentCount").value) || 200;
+  totalStudents = val;
+  renderPlans();
+  goStep(2);
+}
+
+// ── STEP 2 ─────────────────────────────────────────────────────────────
+function renderPlans() {
+  const numPlans = Math.min(Math.ceil(totalStudents / 70), 3);
+  const planIds = ["A","B","C"].slice(0, numPlans);
+  const subjects = SEMESTER_COURSES[currentSem] || [];
+
+  document.getElementById("plansTitle").textContent = "Choose Your Timetable Plan";
+  document.getElementById("plansSubtitle").textContent =
+    `${totalStudents} students → ${numPlans} plan${numPlans>1?"s":""} for Semester ${currentSem}. Each plan holds up to 70 students.`;
+
+  const grid = document.getElementById("plansGrid");
+  grid.innerHTML = "";
+
+  const planMeta = {
+    A: {name:"Plan A — Morning Batch", type:"Morning Theory + Afternoon Lab", typeClass:"type-morning", desc:"Theory classes in the morning, lab sessions in the afternoon."},
+    B: {name:"Plan B — Afternoon Batch", type:"Morning Lab + Afternoon Theory", typeClass:"type-evening", desc:"Lab sessions in the morning, theory classes post-lunch."},
+    C: {name:"Plan C — Mixed Batch", type:"Mixed Theory + Lab Schedule", typeClass:"type-mixed", desc:"Balanced mix of theory and lab across the day."},
+  };
+
+  // Fixed seed seats for demo
+  const demoSeats = {A: 45, B: 62, C: 28};
+
+  planIds.forEach(pid => {
+    const meta = planMeta[pid];
+    const capacity = 70;
+    const seats = (seatCounts[pid] || 0) + (demoSeats[pid] || 0);
+    const pct = Math.round((seats / capacity) * 100);
+    const isFull = seats >= capacity;
+    const left = Math.max(0, capacity - seats);
+    const fillClass = pct >= 100 ? "fill-full" : pct >= 80 ? "fill-warn" : "fill-ok";
+
+    // Show first 5 subjects as preview
+    const subjPreview = subjects.slice(0, 5).map(s => `<div class="plan-subj-item">${s}</div>`).join("");
+    const more = subjects.length > 5 ? `<div class="plan-subj-item" style="color:var(--purple);font-weight:600;">+${subjects.length-5} more subjects</div>` : "";
+
+    const card = document.createElement("div");
+    card.className = `plan-card${isFull ? " full" : ""}`;
+    card.id = `planCard${pid}`;
+    card.innerHTML = `
+      <div class="plan-name">${meta.name}</div>
+      <span class="plan-type ${meta.typeClass}">${meta.type}</span>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5;">${meta.desc}</p>
+      <div class="plan-subj-list">${subjPreview}${more}</div>
+      <div class="seat-bar-wrap">
+        <div class="seat-bar-info">
+          <span>${seats}/${capacity} seats filled</span>
+          <span style="font-weight:600;color:${isFull?"var(--red)":left<=10?"var(--orange)":"var(--green)"};">${isFull?"Full":`${left} left`}</span>
+        </div>
+        <div class="seat-bar"><div class="seat-fill ${fillClass}" style="width:${Math.min(pct,100)}%"></div></div>
+      </div>
+      ${!isFull ? `<button class="select-btn" onclick="selectPlan('${pid}')">Select this plan →</button>` : ""}
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function selectPlan(pid) {
+  selectedPlanId = pid;
+  const subjects = SEMESTER_COURSES[currentSem] || [];
+  selectedSubjects = subjects;
+
+  // Save to backend
+  fetch("/timetable/select-plan", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({plan_id: pid, semester: currentSem, subjects: subjects})
+  }).then(r => r.json()).then(d => {
+    if (d.success) showToast(`✓ Joined Plan ${pid} — Semester ${currentSem}`);
+  });
+
+  renderTimetable();
+  goStep(3);
+}
+
+// ── STEP 3 ─────────────────────────────────────────────────────────────
+function renderTimetable() {
+  const planMeta = {
+    A:{name:"Plan A — Morning Batch",type:"Morning Theory + Afternoon Lab",typeClass:"type-morning",desc:"Theory in morning, lab in afternoon."},
+    B:{name:"Plan B — Afternoon Batch",type:"Morning Lab + Afternoon Theory",typeClass:"type-evening",desc:"Lab in morning, theory after lunch."},
+    C:{name:"Plan C — Mixed Batch",type:"Mixed Theory + Lab",typeClass:"type-mixed",desc:"Balanced theory and lab throughout day."},
+  };
+  const meta = planMeta[selectedPlanId];
+  document.getElementById("ttPlanName").textContent = meta.name;
+  document.getElementById("ttPlanDesc").textContent = meta.desc;
+  const tag = document.getElementById("ttPlanTag");
+  tag.textContent = meta.type; tag.className = `tt-plan-tag ${meta.typeClass}`;
+
+  const subjects = selectedSubjects;
+  const planDef = PLAN_TEMPLATES[selectedPlanId];
+
+  // Build legend
+  const legend = document.getElementById("legendGrid");
+  legend.innerHTML = subjects.map((s, i) => {
+    const c = COLORS[i % COLORS.length];
+    return `<div class="legend-item"><div class="legend-dot" style="background:${c.fg}"></div><span style="font-size:12px;font-weight:600;">${s}</span></div>`;
+  }).join("");
+
+  // Build theory grid
+  buildGrid("theoryTable", THEORY_PERIODS, planDef.theory, subjects, false);
+  buildGrid("labTable", LAB_PERIODS, planDef.lab, subjects, true);
+}
+
+function buildGrid(tableId, periods, slotDef, subjects, isLab) {
+  const table = document.getElementById(tableId);
+  let html = `<thead><tr><th>Period</th>${DAYS.map(d=>`<th>${d}</th>`).join("")}</tr></thead><tbody>`;
+
+  periods.forEach(period => {
+    if (period.type === "break") {
+      html += `<tr><td colspan="${DAYS.length+1}" style="background:#fffbeb;font-size:11px;font-weight:600;color:var(--orange);padding:7px 12px;text-align:left;">☕ Break — ${period.time}</td></tr>`;
+      return;
+    }
+    if (period.type === "lunch") {
+      html += `<tr><td colspan="${DAYS.length+1}" style="background:#f0fdf4;font-size:11px;font-weight:600;color:var(--green);padding:7px 12px;text-align:left;">🍽 Lunch — ${period.time}</td></tr>`;
+      return;
+    }
+
+    html += `<tr><td class="day-col" style="padding:8px;text-align:center;">
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;">${period.slot}</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:2px;">${period.time}</div>
+    </td>`;
+
+    DAYS.forEach((day, di) => {
+      let subjIndex = -1;
+      if (!isLab) {
+        const daySlots = slotDef[day] || [];
+        const si = daySlots.indexOf(period.slot);
+        if (si !== -1) subjIndex = si;
+      } else {
+        // Lab: slotDef is {MON: "L31", TUE: "L37"...} — match by day
+        if (slotDef[day]) {
+          // Map lab slot code to period
+          const labSlot = slotDef[day];
+          const periodIdx = ["L1","L2","L3","L4","L31","L37","L43","L49","L55"].indexOf(labSlot);
+          const labPeriodMap = {0:"L1-L2",1:"L1-L2",2:"L3-L4",3:"L3-L4",4:"L7-L8",5:"L7-L8",6:"L7-L8",7:"L7-L8",8:"L7-L8"};
+          if (labPeriodMap[periodIdx] === period.slot) {
+            const theorySlots = PLAN_TEMPLATES[selectedPlanId]?.theory?.[day] || [];
+            subjIndex = theorySlots.length; // lab subject follows theory subjects
+          }
+        }
+      }
+
+      if (subjIndex >= 0 && subjIndex < subjects.length) {
+        const subj = subjects[subjIndex];
+        const c = COLORS[subjIndex % COLORS.length];
+        html += `<td><div class="slot-cell" style="background:${c.bg}">
+          <div class="slot-code" style="color:${c.fg}">${period.slot}</div>
+          <div class="slot-subj" style="color:${c.fg}">${subj.length > 18 ? subj.slice(0,16)+"…" : subj}</div>
+          <div class="slot-type" style="color:${c.fg}">${isLab?"Lab":"Theory"}</div>
+        </div></td>`;
+      } else {
+        html += `<td><div class="slot-cell empty"><div class="slot-code">${period.slot}</div></div></td>`;
+      }
+    });
+    html += `</tr>`;
+  });
+
+  html += `</tbody>`;
+  table.innerHTML = html;
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────
+function goStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById(`panel${i}`).classList.toggle("active", i===n);
+    const btn = document.getElementById(`stepBtn${i}`);
+    btn.className = "step" + (i===n?" active":i<n?" done":"");
+    btn.querySelector(".step-num").textContent = i < n ? "✓" : i;
+  });
+  document.getElementById("stepBadge").textContent = `Step ${n} of 3`;
+}
+
+function resetAll() {
+  selectedPlanId = null; selectedSubjects = [];
+  fetch("/timetable/select-plan", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({plan_id:"",semester:currentSem,subjects:[]})});
+  goStep(1);
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast"); t.textContent = msg;
+  t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 2800);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────
+previewPlans(200);
+
+// If student already has a plan saved, jump to step 3
+if (EXISTING_SMART && EXISTING_SMART.plan_id) {
+  selectedPlanId = EXISTING_SMART.plan_id;
+  currentSem = EXISTING_SMART.semester;
+  try { selectedSubjects = JSON.parse(EXISTING_SMART.subjects_json); } catch(e) { selectedSubjects = SEMESTER_COURSES[currentSem] || []; }
+  renderTimetable();
+  goStep(3);
+}
+</script>
+</body>
+</html>

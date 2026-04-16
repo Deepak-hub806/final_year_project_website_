@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard — VIT Support</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #f8f7ff; --sidebar: #0f172a; --card: #ffffff;
+    --purple: #6d28d9; --purple-light: #ede9fe; --purple-mid: #7c3aed;
+    --green: #059669; --green-light: #d1fae5;
+    --orange: #d97706; --orange-light: #fef3c7;
+    --red: #dc2626; --red-light: #fee2e2;
+    --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+    --font: 'Sora', sans-serif; --mono: 'JetBrains Mono', monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); display:flex; height:100vh; overflow:hidden; }
+
+  /* SIDEBAR */
+  .sidebar { width:240px; background:var(--sidebar); color:white; display:flex; flex-direction:column; padding:28px 20px; flex-shrink:0; height:100vh; overflow-y:auto; }
+  .logo { font-size:17px; font-weight:700; color:white; margin-bottom:36px; }
+  .logo span { color:#a78bfa; }
+  .sec-label { font-size:10px; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+  .nav-link { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; color:#94a3b8; font-size:13.5px; font-weight:500; text-decoration:none; margin-bottom:4px; transition:all 0.15s; }
+  .nav-link:hover { background:rgba(255,255,255,0.06); color:white; }
+  .nav-link.active { background:var(--purple); color:white; }
+  .nav-icon { font-size:16px; width:18px; text-align:center; }
+  .sidebar-divider { border:none; border-top:1px solid #1e293b; margin:18px 0; }
+  .sidebar-user { margin-top:auto; padding:12px 14px; background:rgba(255,255,255,0.05); border-radius:10px; }
+  .sidebar-user .name { font-weight:600; color:white; font-size:13px; }
+  .sidebar-user .role { color:#64748b; font-size:11px; margin-top:2px; }
+
+  /* MAIN */
+  .main { flex:1; overflow-y:auto; padding:32px; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; }
+  .topbar-left h1 { font-size:22px; font-weight:700; letter-spacing:-0.4px; }
+  .topbar-left h1 span { color:var(--purple); }
+  .topbar-left p { color:var(--muted); font-size:13.5px; margin-top:4px; }
+  .date-badge { background:white; border:1px solid var(--border); padding:8px 16px; border-radius:20px; font-size:12px; font-weight:600; color:var(--muted); font-family:var(--mono); }
+
+  /* STAT CARDS */
+  .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+  .stat-card { background:white; border-radius:14px; padding:22px; border:1px solid var(--border); position:relative; overflow:hidden; transition:transform 0.15s; }
+  .stat-card:hover { transform:translateY(-2px); }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent,var(--purple)); }
+  .stat-label { font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
+  .stat-value { font-size:32px; font-weight:700; letter-spacing:-1px; color:var(--text); }
+  .stat-sub { font-size:12px; color:var(--muted); margin-top:6px; }
+  .stat-icon { position:absolute; top:18px; right:18px; font-size:22px; opacity:0.15; }
+
+  /* TODAY'S CLASSES */
+  .section-title { font-size:15px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .today-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; margin-bottom:24px; }
+  .class-card { background:white; border-radius:12px; padding:16px 18px; border:1px solid var(--border); display:flex; align-items:center; gap:14px; transition:all 0.15s; }
+  .class-card:hover { border-color:var(--purple); box-shadow:0 4px 12px rgba(109,40,217,0.08); }
+  .class-dot { width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .class-dot.theory { background:var(--purple-light); }
+  .class-dot.lab { background:var(--green-light); }
+  .class-info .subj { font-size:13px; font-weight:600; }
+  .class-info .meta { font-size:11px; color:var(--muted); margin-top:3px; font-family:var(--mono); }
+  .class-badge { margin-left:auto; font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; }
+  .badge-theory { background:var(--purple-light); color:var(--purple); }
+  .badge-lab { background:var(--green-light); color:var(--green); }
+
+  /* SETUP PROMPT */
+  .setup-prompt { background:white; border-radius:14px; padding:28px; border:2px dashed var(--border); text-align:center; margin-bottom:24px; }
+  .setup-prompt .icon { font-size:36px; margin-bottom:12px; }
+  .setup-prompt h3 { font-size:16px; font-weight:700; margin-bottom:6px; }
+  .setup-prompt p { color:var(--muted); font-size:13px; margin-bottom:18px; }
+  .btn-setup { background:var(--purple); color:white; padding:11px 24px; border-radius:9px; border:none; font-family:var(--font); font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-block; transition:all 0.15s; }
+  .btn-setup:hover { background:var(--purple-mid); }
+
+  /* SUBJECT ATTENDANCE */
+  .subj-att-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+  .subj-att-card { background:white; border-radius:12px; padding:16px 18px; border:1px solid var(--border); }
+  .subj-att-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .subj-name { font-size:13px; font-weight:600; }
+  .subj-pct { font-family:var(--mono); font-size:14px; font-weight:700; }
+  .pct-safe { color:var(--green); }
+  .pct-warn { color:var(--orange); }
+  .pct-danger { color:var(--red); }
+  .att-bar { height:6px; background:var(--border); border-radius:4px; overflow:hidden; }
+  .att-fill { height:100%; border-radius:4px; }
+  .fill-safe { background:var(--green); }
+  .fill-warn { background:var(--orange); }
+  .fill-danger { background:var(--red); }
+  .subj-meta { font-size:11px; color:var(--muted); margin-top:6px; }
+
+  .empty-state { color:var(--muted); font-size:13px; text-align:center; padding:24px; background:white; border-radius:12px; border:1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">VIT <span>Support</span></div>
+  <div class="sec-label">Navigation</div>
+  <a href="/dashboard" class="nav-link active"><span class="nav-icon">🏠</span> Dashboard</a>
+  <a href="/cgpa" class="nav-link"><span class="nav-icon">📊</span> CGPA Calculator</a>
+  <a href="/update-attendance" class="nav-link"><span class="nav-icon">📅</span> Attendance</a>
+  <a href="/timetable" class="nav-link"><span class="nav-icon">🗓️</span> Timetable</a>
+  <a href="/chatbot" class="nav-link"><span class="nav-icon">🤖</span> AI Chatbot</a>
+  <hr class="sidebar-divider"/>
+  <a href="/profile" class="nav-link"><span class="nav-icon">👤</span> Profile</a>
+  <a href="/logout" class="nav-link"><span class="nav-icon">🚪</span> Logout</a>
+  <div class="sidebar-user">
+    <div class="name">{{ user['username'] }}</div>
+    <div class="role">Sem {{ user['semester'] or '1' }} — {{ user['branch'] or 'VIT Student' }}</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Good {{ greeting }}, <span>{{ user['username'].split()[0] }}</span> 👋</h1>
+      <p>Here's your academic snapshot for today.</p>
+    </div>
+    <div class="date-badge" id="dateBadge"></div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stats-grid">
+    <div class="stat-card" style="--accent:#6d28d9;">
+      <div class="stat-icon">📊</div>
+      <div class="stat-label">Current CGPA</div>
+      <div class="stat-value">{{ data.cgpa if data.cgpa else '—' }}</div>
+      <div class="stat-sub">
+        {% if data.cgpa %}
+          {% if data.cgpa >= 8.5 %}🏆 Excellent standing{% elif data.cgpa >= 7.0 %}✅ Good standing{% elif data.cgpa >= 6.0 %}⚠️ Meets placement cutoff{% else %}❌ Below placement cutoff{% endif %}
+        {% else %}Not calculated yet{% endif %}
+      </div>
+    </div>
+    <div class="stat-card" style="--accent:#059669;">
+      <div class="stat-icon">📅</div>
+      <div class="stat-label">Overall Attendance</div>
+      <div class="stat-value">{{ data.attendance|round(1) if data.attendance else '—' }}{% if data.attendance %}%{% endif %}</div>
+      <div class="stat-sub">
+        {% if data.attendance %}
+          {% if data.attendance >= 75 %}✅ Eligible for FAT{% elif data.attendance >= 65 %}⚠️ Condonation needed{% else %}❌ Detained risk{% endif %}
+        {% else %}Not calculated yet{% endif %}
+      </div>
+    </div>
+    <div class="stat-card" style="--accent:#d97706;">
+      <div class="stat-icon">🗓️</div>
+      <div class="stat-label">Classes Today</div>
+      <div class="stat-value">{{ data.classes_today }}</div>
+      <div class="stat-sub">{{ data.today }} — {{ 'No classes' if data.classes_today == 0 else (data.classes_today|string + ' scheduled') }}</div>
+    </div>
+  </div>
+
+  <!-- TODAY'S CLASSES -->
+  <div class="section-title">📚 Today's Classes <span style="font-size:11px;font-weight:500;color:var(--muted);background:var(--bg);padding:3px 10px;border-radius:20px;border:1px solid var(--border);">{{ data.today }}</span></div>
+
+  {% if data.timetable_plan and data.today_classes %}
+    <div class="today-grid">
+      {% for cls in data.today_classes %}
+      <div class="class-card">
+        <div class="class-dot {{ 'lab' if cls.type == 'Lab' else 'theory' }}">{{ '🔬' if cls.type == 'Lab' else '📖' }}</div>
+        <div class="class-info">
+          <div class="subj">{{ cls.subject }}</div>
+          <div class="meta">{{ cls.slot }} · {{ cls.time }}</div>
+        </div>
+        <span class="class-badge {{ 'badge-lab' if cls.type == 'Lab' else 'badge-theory' }}">{{ cls.type }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  {% elif data.timetable_plan and not data.today_classes %}
+    <div class="empty-state">🎉 No classes today — enjoy your day!</div>
+  {% else %}
+    <div class="setup-prompt">
+      <div class="icon">🗓️</div>
+      <h3>No timetable set up yet</h3>
+      <p>Pick a batch plan to see your daily schedule right here on the dashboard.</p>
+      <a href="/timetable" class="btn-setup">Set Up My Timetable →</a>
+    </div>
+  {% endif %}
+
+  <!-- SUBJECT-WISE ATTENDANCE -->
+  <div class="section-title" style="margin-top:8px;">📋 Subject-wise Attendance</div>
+  {% if data.subj_attendance %}
+    <div class="subj-att-grid">
+      {% for s in data.subj_attendance %}
+      {% set pct = ((s.attended / s.total_classes) * 100)|round(1) if s.total_classes > 0 else 0 %}
+      {% set cls = 'safe' if pct >= 75 else ('warn' if pct >= 65 else 'danger') %}
+      <div class="subj-att-card">
+        <div class="subj-att-top">
+          <span class="subj-name">{{ s.subject_name }}</span>
+          <span class="subj-pct pct-{{ cls }}">{{ pct }}%</span>
+        </div>
+        <div class="att-bar"><div class="att-fill fill-{{ cls }}" style="width:{{ [pct,100]|min }}%"></div></div>
+        <div class="subj-meta">{{ s.attended }}/{{ s.total_classes }} classes attended · {% if pct >= 75 %}✅ Safe{% elif pct >= 65 %}⚠️ Apply condonation{% else %}❌ Detained risk{% endif %}</div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">No subject attendance tracked yet. <a href="/update-attendance" style="color:var(--purple);font-weight:600;">Add subjects →</a></div>
+  {% endif %}
+</div>
+
+<script>
+  const now = new Date();
+  const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  document.getElementById("dateBadge").textContent =
+    days[now.getDay()] + ", " + now.getDate() + " " + months[now.getMonth()] + " " + now.getFullYear();
+</script>
+</body>
+</html>

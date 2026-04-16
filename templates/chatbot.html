@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>AI Assistant | VIT Support</title>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Inter, sans-serif; }
+        body { display: flex; background: #f1f5f9; height: 100vh; overflow: hidden; }
+
+        /* ── SIDEBAR — matches dashboard exactly ── */
+        .sidebar { width: 240px; background: #0f172a; color: white; padding: 25px 20px; display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; overflow-y: auto; }
+        .sidebar h2 { font-family: Poppins; margin-bottom: 30px; font-size: 20px; }
+        .nav a { display: block; padding: 12px; color: #cbd5f5; text-decoration: none; border-radius: 8px; margin-bottom: 6px; transition: 0.15s; font-size: 14px; }
+        .nav a:hover, .nav a.active { background: #1e293b; color: white; }
+        .sidebar-divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 16px 0 14px; }
+        .sidebar-lbl { font-size: 10px; font-weight: 600; color: #475569; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+        .quick-q { padding: 7px 10px; border-radius: 8px; font-size: 11px; color: #94a3b8; cursor: pointer; transition: all 0.15s; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .quick-q:hover { background: #1e293b; color: #cbd5f5; }
+        .sidebar-bottom { margin-top: auto; }
+        .user-badge { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #1e293b; border-radius: 10px; margin-top: 16px; }
+        .user-av { width: 30px; height: 30px; background: #6d28d9; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: white; flex-shrink: 0; }
+        .user-av-name { font-size: 12px; font-weight: 600; color: #e2e8f0; }
+        .user-av-role { font-size: 10px; color: #64748b; }
+
+        /* ── MAIN ── */
+        .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        /* ── TOPBAR ── */
+        .topbar { background: white; padding: 14px 28px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+        .topbar-left { display: flex; align-items: center; gap: 12px; }
+        .bot-icon { width: 42px; height: 42px; background: linear-gradient(135deg, #6d28d9, #4f46e5); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 12px rgba(109,40,217,0.25); }
+        .topbar-title { font-family: Poppins; font-size: 16px; font-weight: 600; color: #0f172a; }
+        .topbar-sub { font-size: 12px; color: #64748b; margin-top: 1px; display: flex; align-items: center; gap: 5px; }
+        .online-dot { width: 7px; height: 7px; background: #22c55e; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .model-tag { padding: 5px 12px; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 20px; font-size: 11px; font-weight: 600; color: #6d28d9; }
+        .profile { background: white; padding: 8px 14px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); font-weight: 500; font-size: 14px; }
+
+        /* ── CHAT BODY ── */
+        .chat-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #f8fafc; }
+
+        /* Messages */
+        .messages { flex: 1; overflow-y: auto; padding: 28px 0; scroll-behavior: smooth; }
+        .messages::-webkit-scrollbar { width: 5px; }
+        .messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        /* ── WELCOME SCREEN ── */
+        .welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100%; padding: 40px 20px; text-align: center; }
+        .welcome-icon { width: 68px; height: 68px; background: linear-gradient(135deg, #6d28d9, #4f46e5); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 20px; box-shadow: 0 8px 28px rgba(109,40,217,0.25); }
+        .welcome h2 { font-family: Poppins; font-size: 24px; color: #0f172a; margin-bottom: 10px; }
+        .welcome p { font-size: 14px; color: #64748b; max-width: 420px; line-height: 1.7; margin-bottom: 32px; }
+        .welcome-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 540px; width: 100%; }
+        .w-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; text-align: left; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .w-card:hover { border-color: #6d28d9; box-shadow: 0 4px 16px rgba(109,40,217,0.12); transform: translateY(-2px); }
+        .w-card-icon { font-size: 20px; margin-bottom: 8px; }
+        .w-card-text { font-size: 13px; color: #475569; line-height: 1.5; }
+
+        /* ── MESSAGE ROWS ── */
+        .msg-row { padding: 5px 28px; display: flex; gap: 14px; max-width: 820px; margin: 0 auto; width: 100%; animation: fadeUp 0.2s ease; }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+        .msg-row.user { flex-direction: row-reverse; }
+        .msg-av-wrap { flex-shrink: 0; padding-top: 4px; }
+        .msg-av { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; }
+        .msg-av.bot  { background: linear-gradient(135deg, #6d28d9, #4f46e5); }
+        .msg-av.user { background: #0f172a; color: white; font-size: 13px; }
+        .msg-inner { flex: 1; min-width: 0; }
+        .msg-row.user .msg-inner { display: flex; flex-direction: column; align-items: flex-end; }
+        .msg-sender { font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 5px; }
+        .msg-bubble { padding: 13px 17px; border-radius: 16px; font-size: 14px; line-height: 1.75; display: inline-block; max-width: 100%; }
+        .msg-row.bot  .msg-bubble { background: white; color: #1e293b; border: 1px solid #e2e8f0; border-radius: 4px 16px 16px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .msg-row.user .msg-bubble { background: #6d28d9; color: white; border-radius: 16px 4px 16px 16px; }
+        .msg-bubble strong { font-weight: 700; }
+        .msg-bubble ul { padding-left: 18px; margin: 6px 0; }
+        .msg-bubble li { margin-bottom: 5px; }
+        .msg-time { font-size: 10px; color: #94a3b8; margin-top: 5px; }
+        .msg-row.user .msg-time { text-align: right; }
+
+        /* ── TYPING ── */
+        .typing-row { display: none; padding: 5px 28px; max-width: 820px; margin: 0 auto; width: 100%; }
+        .typing-row.show { display: flex; gap: 14px; animation: fadeUp 0.2s ease; }
+        .typing-bubble { background: white; border: 1px solid #e2e8f0; border-radius: 4px 16px 16px 16px; padding: 13px 17px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; gap: 5px; align-items: center; }
+        .dot { width: 7px; height: 7px; background: #94a3b8; border-radius: 50%; animation: bounce 1.2s infinite; }
+        .dot:nth-child(2) { animation-delay: 0.15s; }
+        .dot:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes bounce { 0%,60%,100%{transform:translateY(0);opacity:.5} 30%{transform:translateY(-7px);opacity:1} }
+
+        /* ── INPUT ── */
+        .input-area { background: white; border-top: 1px solid #e2e8f0; padding: 14px 28px 18px; flex-shrink: 0; }
+        .input-box { max-width: 820px; margin: 0 auto; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; display: flex; align-items: flex-end; padding: 4px 4px 4px 16px; transition: border-color 0.2s, box-shadow 0.2s; }
+        .input-box:focus-within { border-color: #6d28d9; box-shadow: 0 0 0 3px rgba(109,40,217,0.08); background: white; }
+        .chat-input { flex: 1; background: none; border: none; outline: none; color: #0f172a; font-size: 14px; font-family: Inter, sans-serif; padding: 11px 0; resize: none; max-height: 120px; line-height: 1.5; }
+        .chat-input::placeholder { color: #94a3b8; }
+        .send-btn { width: 40px; height: 40px; background: #6d28d9; border: none; border-radius: 10px; color: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; margin: 2px; }
+        .send-btn:hover { background: #5b21b6; transform: scale(1.05); }
+        .send-btn:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+        .input-hint { text-align: center; font-size: 11px; color: #94a3b8; margin-top: 8px; max-width: 820px; margin-left: auto; margin-right: auto; }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h2>VIT Support</h2>
+    <div class="nav">
+        <a href="/dashboard">🏠 &nbsp;Dashboard</a>
+        <a href="/timetable">📅 &nbsp;Timetable</a>
+        <a href="/chatbot" class="active">🤖 &nbsp;AI Assistant</a>
+        <a href="/profile">👤 &nbsp;Profile</a>
+        <a href="/logout">🚪 &nbsp;Logout</a>
+    </div>
+
+    <hr class="sidebar-divider">
+    <div class="sidebar-lbl">Quick Questions</div>
+    <div class="quick-q" onclick="askQ('When is CAT 1?')">📅 When is CAT 1?</div>
+    <div class="quick-q" onclick="askQ('What is the CAT 2 format?')">📖 CAT 2 format?</div>
+    <div class="quick-q" onclick="askQ('When does FAT start?')">📝 FAT schedule?</div>
+    <div class="quick-q" onclick="askQ('When is Riviera 2026?')">🎉 Riviera 2026?</div>
+    <div class="quick-q" onclick="askQ('Am I eligible for exams?')">✅ Exam eligibility?</div>
+    <div class="quick-q" onclick="askQ('What is my current CGPA?')">📊 My CGPA?</div>
+    <div class="quick-q" onclick="askQ('How to apply for revaluation?')">🔄 Revaluation?</div>
+    <div class="quick-q" onclick="askQ('How to view previous year papers?')">📂 Previous papers?</div>
+    <div class="quick-q" onclick="askQ('Am I eligible for placements?')">🎓 Placement eligibility?</div>
+    <div class="quick-q" onclick="askQ('How to use VTOP?')">💻 VTOP guide?</div>
+
+    <div class="sidebar-bottom">
+        <div class="user-badge">
+            <div class="user-av">{{ session.username[0]|upper }}</div>
+            <div>
+                <div class="user-av-name">{{ session.username }}</div>
+                <div class="user-av-role">VIT Student</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <div class="bot-icon">🤖</div>
+            <div>
+                <div class="topbar-title">VIT Academic Assistant</div>
+                <div class="topbar-sub"><span class="online-dot"></span> Online &middot; Winter Semester 2025&ndash;26</div>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+            <div class="model-tag">gemini-2.0-flash</div>
+            <div class="profile">{{ session.username[0]|upper }}</div>
+        </div>
+    </div>
+
+    <!-- Chat -->
+    <div class="chat-body">
+        <div class="messages" id="messages">
+
+            <!-- Welcome -->
+            <div class="welcome" id="welcomeScreen">
+                <div class="welcome-icon">🤖</div>
+                <h2>Hi {{ session.username }}, how can I help? 👋</h2>
+                <p>I'm your VIT Academic Assistant — ask me about exams, attendance, Riviera, placements, VTOP and anything about your semester.</p>
+                <div class="welcome-cards">
+                    <div class="w-card" onclick="askQ('When is CAT 1 and CAT 2?')">
+                        <div class="w-card-icon">📅</div>
+                        <div class="w-card-text">When are CAT 1 & CAT 2 scheduled?</div>
+                    </div>
+                    <div class="w-card" onclick="askQ('When is Riviera 2026?')">
+                        <div class="w-card-icon">🎉</div>
+                        <div class="w-card-text">When is Riviera 2026 happening?</div>
+                    </div>
+                    <div class="w-card" onclick="askQ('Am I eligible to write my FAT exams based on my attendance?')">
+                        <div class="w-card-icon">✅</div>
+                        <div class="w-card-text">Check my FAT exam eligibility</div>
+                    </div>
+                    <div class="w-card" onclick="askQ('Am I eligible for campus placements based on my CGPA?')">
+                        <div class="w-card-icon">🎓</div>
+                        <div class="w-card-text">Check my placement eligibility</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing -->
+            <div class="typing-row" id="typingRow">
+                <div class="msg-av-wrap"><div class="msg-av bot">🤖</div></div>
+                <div class="typing-bubble">
+                    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Input -->
+        <div class="input-area">
+            <div class="input-box">
+                <textarea class="chat-input" id="chatInput" placeholder="Ask anything about VIT..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">&#10148;</button>
+            </div>
+            <div class="input-hint">Powered by Google Gemini AI &middot; VIT Winter Semester 2025&ndash;26</div>
+        </div>
+    </div>
+</div>
+
+{% if reply %}
+<div id="bot-reply" style="display:none">{{ reply }}</div>
+{% endif %}
+
+<script>
+// @ts-nocheck
+const messagesEl  = document.getElementById('messages');
+const inputEl     = document.getElementById('chatInput');
+const sendBtn     = document.getElementById('sendBtn');
+const typingRow   = document.getElementById('typingRow');
+const welcomeEl   = document.getElementById('welcomeScreen');
+const userInitial = "{{ session.username[0]|upper }}";
+const userName    = "{{ session.username }}";
+let chatStarted   = false;
+
+function getTime() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function hideWelcome() {
+    if (!chatStarted) { welcomeEl.style.display = 'none'; chatStarted = true; }
+}
+
+function appendMessage(text, role) {
+    hideWelcome();
+    const isBot = role === 'bot';
+    const row   = document.createElement('div');
+    row.className = `msg-row ${role}`;
+
+    const avWrap = document.createElement('div');
+    avWrap.className = 'msg-av-wrap';
+    const av = document.createElement('div');
+    av.className = `msg-av ${role}`;
+    av.textContent = isBot ? '🤖' : userInitial;
+    avWrap.appendChild(av);
+
+    const inner  = document.createElement('div');
+    inner.className = 'msg-inner';
+
+    const sender = document.createElement('div');
+    sender.className = 'msg-sender';
+    sender.textContent = isBot ? 'VIT Assistant' : userName;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    let html = text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/^[-•] (.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>')
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n/g, '<br>');
+    bubble.innerHTML = html;
+
+    const time = document.createElement('div');
+    time.className = 'msg-time';
+    time.textContent = getTime();
+
+    inner.appendChild(sender);
+    inner.appendChild(bubble);
+    inner.appendChild(time);
+    row.appendChild(avWrap);
+    row.appendChild(inner);
+    messagesEl.insertBefore(row, typingRow);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function showTyping() { typingRow.classList.add('show'); messagesEl.scrollTop = messagesEl.scrollHeight; }
+function hideTyping()  { typingRow.classList.remove('show'); }
+
+async function sendMessage() {
+    const msg = inputEl.value.trim();
+    if (!msg) return;
+    appendMessage(msg, 'user');
+    inputEl.value = '';
+    inputEl.style.height = 'auto';
+    sendBtn.disabled = true;
+    showTyping();
+    try {
+        const fd = new FormData();
+        fd.append('message', msg);
+        const res   = await fetch('/chatbot', { method: 'POST', body: fd });
+        const html  = await res.text();
+        const doc   = new DOMParser().parseFromString(html, 'text/html');
+        const el    = doc.getElementById('bot-reply');
+        const reply = el ? el.textContent.trim() : "Sorry, I couldn't get a response. Please try again.";
+        hideTyping();
+        appendMessage(reply, 'bot');
+    } catch(e) {
+        hideTyping();
+        appendMessage("Sorry, something went wrong. Please try again.", 'bot');
+    }
+    sendBtn.disabled = false;
+    inputEl.focus();
+}
+
+function askQ(q) { inputEl.value = q; sendMessage(); }
+function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+window.addEventListener('DOMContentLoaded', () => inputEl.focus());
+</script>
+</body>
+</html>
