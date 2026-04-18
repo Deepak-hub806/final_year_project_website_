@@ -617,7 +617,7 @@ Be friendly, clear and professional. Use {username}'s name occasionally. Keep re
                 api_key = os.environ.get("GEMINI_API_KEY")
                 genai.configure(api_key=api_key)
                 model = genai.GenerativeModel(
-                    model_name="gemini-2.0-flash",
+                    model_name="gemini-1.5-flash",
                     system_instruction=system_prompt
                 )
                 response = model.generate_content(msg)
