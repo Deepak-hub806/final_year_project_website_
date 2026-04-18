@@ -1,5 +1,5 @@
 import re
-import google.generativeai as genai
+from google import genai
 import sqlite3
 import os
 import json
