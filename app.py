@@ -1,5 +1,5 @@
 import re
-from google import genai
+from groq import Groq
 import sqlite3
 import os
 import json
@@ -614,17 +614,17 @@ VIT ACADEMIC CALENDAR — WINTER SEMESTER 2025-26:
 Be friendly, clear and professional. Use {username}'s name occasionally. Keep responses concise."""
 
             try:
-                client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
-                response = client.models.generate_content(
-                    model="gemini-2.0-flash-lite",
-                    contents=msg,
-                    config={"system_instruction": system_prompt}
+                client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+                chat = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": msg}
+                    ]
                 )
-                reply = response.text
+                reply = chat.choices[0].message.content
             except Exception as e:
                 reply = f"Sorry, I'm having trouble connecting right now. Please try again later. (Error: {str(e)})"
-
-    return render_template("chatbot.html", reply=reply)
 
 
 # ---------------- TIMETABLE ----------------
