@@ -625,6 +625,7 @@ Be friendly, clear and professional. Use {username}'s name occasionally. Keep re
                 reply = chat.choices[0].message.content
             except Exception as e:
                 reply = f"Sorry, I'm having trouble connecting right now. Please try again later. (Error: {str(e)})"
+                return render_template("chatbot.html", reply=reply)
 
 
 # ---------------- TIMETABLE ----------------
