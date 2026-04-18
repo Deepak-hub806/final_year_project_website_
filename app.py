@@ -616,7 +616,7 @@ Be friendly, clear and professional. Use {username}'s name occasionally. Keep re
             try:
                 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
                 response = client.models.generate_content(
-                    model="gemini-2.0-flash",
+                    model="gemini-2.5-pro",
                     contents=msg,
                     config={"system_instruction": system_prompt}
                 )
