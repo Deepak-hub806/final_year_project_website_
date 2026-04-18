@@ -547,6 +547,7 @@ def profile():
 
 
 # ---------------- CHATBOT ----------------
+# ---------------- CHATBOT ----------------
 @app.route("/chatbot", methods=["GET", "POST"])
 def chatbot():
     if "user_id" not in session:
@@ -565,9 +566,9 @@ def chatbot():
             ).fetchone()
             conn.close()
 
-            cgpa       = user["cgpa"]       if user["cgpa"]       else "Not calculated yet"
+            cgpa = user["cgpa"] if user["cgpa"] else "Not calculated yet"
             attendance = user["attendance"] if user["attendance"] else "Not calculated yet"
-            username   = user["username"]
+            username = user["username"]
 
             if isinstance(attendance, (int, float)) and attendance < 65:
                 att_status = f"⚠️ CRITICAL: {username}'s attendance is {attendance}%, below 65%. Detained risk."
@@ -625,8 +626,8 @@ Be friendly, clear and professional. Use {username}'s name occasionally. Keep re
                 reply = chat.choices[0].message.content
             except Exception as e:
                 reply = f"Sorry, I'm having trouble connecting right now. Please try again later. (Error: {str(e)})"
-                return render_template("chatbot.html", reply=reply)
 
+    return render_template("chatbot.html", reply=reply)
 
 # ---------------- TIMETABLE ----------------
 
